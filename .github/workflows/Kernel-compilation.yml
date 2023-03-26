@@ -21,8 +21,8 @@ on:
         description: "Set the path of kernel .config"
         required: false
         default: ""
-  schedule:
-    - cron: 16 19 * * *
+  #schedule:
+    #- cron: 16 19 * * *
     
 env:
   KERNEL_REPO: unifreq
