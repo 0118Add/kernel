@@ -95,7 +95,6 @@ on:
         options:
           - kernel-config/release/general
           - false
-
 env:
   TZ: America/New_York
 
@@ -129,7 +128,6 @@ jobs:
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           sudo timedatectl set-timezone "${TZ}"
           echo "status=success" >> ${GITHUB_OUTPUT}
-
       - name: Create simulated physical disk
         id: disk
         run: |
@@ -148,7 +146,6 @@ jobs:
           sudo mount /dev/github/runner /builder
           sudo chown -R runner.runner /builder
           df -Th
-
       - name: Create a mapped directory
         id: mapped
         working-directory: /builder
@@ -158,7 +155,6 @@ jobs:
           ln -sf /builder/kernel /home/runner/work/_actions/ophub/amlogic-s9xxx-armbian/main/compile-kernel/kernel
           ln -sf /builder/output /home/runner/work/_actions/ophub/amlogic-s9xxx-armbian/main/compile-kernel/output
           echo "status=success" >> ${GITHUB_OUTPUT}
-
       - name: Compile the kernel [ ${{ inputs.kernel_version }} ]
         uses: ophub/amlogic-s9xxx-armbian@main
         if: ${{ steps.mapped.outputs.status }} == 'success' && !cancelled()
@@ -180,7 +176,7 @@ jobs:
           tag: kernel_stable
           artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
           allowUpdates: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           body: |
             - The kernel can be used to compile Armbian and OpenWrt.
             - The kernel source code comes from: ${{ inputs.kernel_source }}
