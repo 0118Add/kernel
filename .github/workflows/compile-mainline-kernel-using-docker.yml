@@ -82,10 +82,11 @@ on:
       kernel_sign:
         description: "Set the kernel custom signature"
         required: false
-        default: "-ophub"
+        default: "-flippy"
         type: choice
         options:
           - -ophub
+          - -flippy
           - -happy-new-year
           - -dragon-boat-festival
           - -mid-autumn-festival
