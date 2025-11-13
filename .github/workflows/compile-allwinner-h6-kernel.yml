@@ -46,7 +46,7 @@ on:
       kernel_toolchain:
         description: "Select the compilation toolchain"
         required: false
-        default: "clang"
+        default: "gcc"
         type: choice
         options:
           - clang
@@ -71,7 +71,6 @@ on:
         options:
           - trixie
           - bookworm
-          - bullseye
           - noble
           - jammy
       kernel_sign:
@@ -152,10 +151,21 @@ jobs:
           sudo pvcreate /dev/loop7
           sudo vgcreate github /dev/loop6 /dev/loop7
           sudo lvcreate -n runner -l 100%FREE github
-          sudo mkfs.xfs /dev/github/runner
+          sudo mkfs.xfs -f -i sparse=0 -b size=4096 /dev/github/runner
           sudo mkdir -p /builder
           sudo mount /dev/github/runner /builder
-          sudo chown -R runner.runner /builder
+          sudo chown -R runner:runner /builder
+          # Prepare cached directory
+          echo "Preparing cached directory..."
+          sudo cp -af /home/runner/actions-runner/cached /builder/cached
+          rm -rf /home/runner/actions-runner/cached
+          sudo ln -sf /builder/cached /home/runner/actions-runner/cached
+          echo "_diag directory content:"
+          ls -lh /home/runner/actions-runner/cached/_diag/ 2>/dev/null
+          echo "Verifying the symbolic link..."
+          ls -ld /home/runner/actions-runner/cached
+          df -Th /home/runner/actions-runner/cached
+          echo "Server disk layout:"
           df -Th
           echo "status=success" >> ${GITHUB_OUTPUT}
 
@@ -185,7 +195,7 @@ jobs:
               --name armbian-ophub \
               -v /builder/compile-kernel:/opt/kernel/compile-kernel \
               --restart=always \
-              ophub/armbian-${{ inputs.docker_image }}:latest
+              ophub/armbian-${{ inputs.docker_image }}:arm64
 
           echo "status=success" >> ${GITHUB_OUTPUT}
 
@@ -211,6 +221,9 @@ jobs:
           tag: kernel_h6
           artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
           allowUpdates: true
+          removeArtifacts: false
+          replacesArtifacts: true
+          makeLatest: true
           token: ${{ secrets.GITHUB_TOKEN }}
           body: |
             - The kernel can be used to compile Armbian and OpenWrt.

@@ -148,11 +148,23 @@ jobs:
           sudo pvcreate /dev/loop7
           sudo vgcreate github /dev/loop6 /dev/loop7
           sudo lvcreate -n runner -l 100%FREE github
-          sudo mkfs.xfs /dev/github/runner
+          sudo mkfs.xfs -f -i sparse=0 -b size=4096 /dev/github/runner
           sudo mkdir -p /builder
           sudo mount /dev/github/runner /builder
-          sudo chown -R runner.runner /builder
+          sudo chown -R runner:runner /builder
+          # Prepare cached directory
+          echo "Preparing cached directory..."
+          sudo cp -af /home/runner/actions-runner/cached /builder/cached
+          rm -rf /home/runner/actions-runner/cached
+          sudo ln -sf /builder/cached /home/runner/actions-runner/cached
+          echo "_diag directory content:"
+          ls -lh /home/runner/actions-runner/cached/_diag/ 2>/dev/null
+          echo "Verifying the symbolic link..."
+          ls -ld /home/runner/actions-runner/cached
+          df -Th /home/runner/actions-runner/cached
+          echo "Server disk layout:"
           df -Th
+          echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Create a mapped directory
         id: mapped
@@ -187,10 +199,15 @@ jobs:
           tag: kernel_rk3588
           artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
           allowUpdates: true
+          removeArtifacts: false
+          replacesArtifacts: true
+          makeLatest: true
           token: ${{ secrets.GITHUB_TOKEN }}
           body: |
             - The kernel can be used to compile Armbian and OpenWrt.
             - The kernel source code comes from: ${{ inputs.kernel_source }}
             - The kernel compilation toolchain: ${{ inputs.kernel_toolchain }}
             - This is a dedicated kernel for `Rockchip rk3588` and is not compatible with other series.
+            - Kernels with `flippy` in the name are maintained by [flippy](https://github.com/unifreq). The others are automatically compiled online.
             - 这是 `Rockchip rk3588` 专用内核，和其他系列不通用。
+            - 其中名字里带有 `flippy` 的是手动上传的由 [flippy](https://github.com/unifreq) 大佬维护制作分享的内核，其他是在线自动编译的。
