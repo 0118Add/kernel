@@ -83,6 +83,7 @@ on:
         type: choice
         options:
           - 
+          - -flippy
           - -ophub
           - -happy-new-year
           - -dragon-boat-festival
